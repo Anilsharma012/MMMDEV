@@ -1,13 +1,14 @@
-import { getDatabase } from "../db/mongodb";
+import { getDatabase, connectToDatabase } from "../db/mongodb";
 import { ObjectId } from "mongodb";
 
 export const addBankTransferTestData = async () => {
   try {
     const db = getDatabase();
 
-    // Check if test data already exists
-    const existingTransfers = await db.collection("bank_transfers").countDocuments();
-    
+    const existingTransfers = await db
+      .collection("bank_transfers")
+      .countDocuments();
+
     if (existingTransfers > 0) {
       console.log(`📊 Bank transfers collection already has ${existingTransfers} records`);
       return;
@@ -15,7 +16,6 @@ export const addBankTransferTestData = async () => {
 
     console.log("📦 Adding test bank transfer data...");
 
-    // Sample bank transfer data
     const sampleTransfers = [
       {
         userId: new ObjectId(),
@@ -117,12 +117,10 @@ export const addBankTransferTestData = async () => {
       }
     ];
 
-    // Insert test data
     const result = await db.collection("bank_transfers").insertMany(sampleTransfers);
-    
+
     console.log(`✅ Added ${result.insertedCount} test bank transfers`);
     console.log("📊 Bank transfer test data added successfully!");
-
     return result;
   } catch (error) {
     console.error("❌ Error adding bank transfer test data:", error);
@@ -130,9 +128,13 @@ export const addBankTransferTestData = async () => {
   }
 };
 
-// Run if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  addBankTransferTestData()
+// If script is run directly, connect DB then run test data
+if (
+  import.meta.url === `file://${process.argv[1]}` &&
+  process.env.NODE_ENV !== "production"
+) {
+  connectToDatabase()
+    .then(() => addBankTransferTestData())
     .then(() => {
       console.log("✅ Bank transfer test data script completed");
       process.exit(0);
